@@ -1,5 +1,5 @@
 # frozen_string_literal: true
-# name: discourse-digest-strict-truncation
+# name: discourse-truncate-digest
 # about: Strictly truncates digest email post/reply excerpts (topic titles are left untouched, they never route through this method)
 # version: 0.1
 # authors: jroneilky
