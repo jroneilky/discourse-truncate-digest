@@ -1,0 +1,6 @@
+plugins:
+  digest_post_truncation_length:
+    client: false
+    default: 50
+    min: 10
+    max: 500
