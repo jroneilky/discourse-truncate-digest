@@ -1,0 +1,3 @@
+en:
+  site_settings:
+    discourse_truncate_digest_length: "Maximum characters for each post/reply excerpt in digest (activity summary) emails, including the trailing ellipsis."

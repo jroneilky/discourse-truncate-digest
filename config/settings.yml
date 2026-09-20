@@ -1,0 +1,6 @@
+plugins:
+  discourse_truncate_digest_length:
+    default: 50
+    min: 10
+    max: 500
+    client: false

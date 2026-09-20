@@ -1,16 +1,14 @@
 # frozen_string_literal: true
 
-# name: discourse-digest-strict-truncation
+# name: discourse-truncate-digest
 # about: Hard-truncates post/reply excerpts in digest (activity summary) emails to a configurable number of characters. Topic titles are not affected.
-# version: 0.2
+# version: 0.4
 # authors: jroneilky
-# url: https://github.com/jroneilky/discourse-digest-strict-truncation
+# url: https://github.com/jroneilky/discourse-truncate-digest
 # required_version: 3.0.0
 
-enabled_site_setting :digest_strict_truncation_enabled
-
-module ::DigestStrictTruncation
-  PLUGIN_NAME = "discourse-digest-strict-truncation"
+module ::DiscourseTruncateDigest
+  PLUGIN_NAME = "discourse-truncate-digest"
 
   # Only block-level closers get a space injected. Injecting after *every*
   # closing tag splits words that contain inline markup ("wo<b>r</b>d").
@@ -21,9 +19,12 @@ module ::DigestStrictTruncation
   LINE_BREAK = %r{<br[^>]*>|<hr[^>]*>}i
 
   class << self
+    # Admin > Settings > Plugins > discourse_truncate_digest_length.
+    # Read on every call, so changes apply to the next digest with no rebuild.
     def max_length
-      len = SiteSetting.digest_strict_truncation_length.to_i
-      len < 5 ? 50 : len
+      SiteSetting.discourse_truncate_digest_length.to_i.clamp(10, 500)
+    rescue StandardError
+      50
     end
 
     # HTML -> single-line plain text, entities decoded exactly once.
@@ -67,7 +68,6 @@ module ::DigestStrictTruncation
     # Accept anything so a future core signature change can't raise ArgumentError
     # here; zsuper forwards whatever was passed.
     def email_excerpt(html_arg = nil, *args, **kwargs, &blk)
-      return super unless SiteSetting.digest_strict_truncation_enabled
       return "".html_safe if html_arg.blank?
 
       # Let core do the sanitation it owns: first_paragraphs_from,
@@ -77,13 +77,13 @@ module ::DigestStrictTruncation
         begin
           super.to_s
         rescue => e
-          ::DigestStrictTruncation.warn_error(e, "super")
+          ::DiscourseTruncateDigest.warn_error(e, "super")
           html_arg.to_s
         end
 
-      ::DigestStrictTruncation.truncate_html(html)
+      ::DiscourseTruncateDigest.truncate_html(html)
     rescue => e
-      ::DigestStrictTruncation.warn_error(e, "email_excerpt")
+      ::DiscourseTruncateDigest.warn_error(e, "email_excerpt")
       "".html_safe # never raise inside a mailer
     end
   end
@@ -94,16 +94,16 @@ after_initialize do
   # reloaded in development (and on some console/runner paths). Without
   # reloadable_patch the prepend is silently dropped after a reload.
   reloadable_patch do
-    ::UserNotificationsHelper.prepend(::DigestStrictTruncation::EmailExcerptOverride)
+    ::UserNotificationsHelper.prepend(::DiscourseTruncateDigest::EmailExcerptOverride)
 
     # UserNotifications (the digest mailer) and UserNotificationRenderer include
     # the helper at boot, i.e. before this runs. Prepending into an
     # already-included module only propagates on Ruby >= 3.1, so patch the
     # including classes directly as well. Harmless if it ends up applied twice:
     # the transform is idempotent.
-    ::UserNotifications.prepend(::DigestStrictTruncation::EmailExcerptOverride)
+    ::UserNotifications.prepend(::DiscourseTruncateDigest::EmailExcerptOverride)
     if defined?(::UserNotificationRenderer)
-      ::UserNotificationRenderer.prepend(::DigestStrictTruncation::EmailExcerptOverride)
+      ::UserNotificationRenderer.prepend(::DiscourseTruncateDigest::EmailExcerptOverride)
     end
   end
 end
