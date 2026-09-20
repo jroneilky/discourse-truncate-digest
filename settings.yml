@@ -1,6 +1,9 @@
 plugins:
-  digest_post_truncation_length:
+  digest_strict_truncation_enabled:
+    default: true
     client: false
+  digest_strict_truncation_length:
     default: 50
     min: 10
     max: 500
+    client: false
