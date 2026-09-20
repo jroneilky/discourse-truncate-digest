@@ -1,3 +1,4 @@
 en:
   site_settings:
-    digest_post_truncation_length: "Max characters for post/reply excerpts in digest emails"
+    digest_strict_truncation_enabled: "Hard-truncate post/reply excerpts in digest (activity summary) emails."
+    digest_strict_truncation_length: "Maximum characters for a digest email excerpt, including the trailing ellipsis. Markup is stripped before counting."
